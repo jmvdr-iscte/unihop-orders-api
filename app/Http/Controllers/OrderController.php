@@ -53,7 +53,7 @@ class OrderController extends Controller
             'job_id' => 'required|uuid',
             'email' => 'required|email',
             'status' => 'required|in:Created,Pending Driver,Assigning Driver,Assigned Driver,Pickup Enroute,Pickup Arrived,Dropoff Enroute,Dropoff Arrived,Delivered,Other',
-            'delivery_date' => 'required|date',
+            'delivery_date' => 'date',
             'delivery_start_time' => 'nullable|date_format:H:i',
             'delivery_end_time' => 'nullable|date_format:H:i',
             'pickup_address' => 'required|string',
@@ -99,6 +99,7 @@ class OrderController extends Controller
         $body = $request->validated();
         $order->update($body);
 
+        //TODO: add stripe
         return response()->json($order);
     }
 

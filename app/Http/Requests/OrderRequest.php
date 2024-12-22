@@ -25,7 +25,7 @@ class OrderRequest extends FormRequest
             'job_id' => 'sometimes|uuid',
             'email' => 'sometimes|email',
             'status' => 'sometimes|in:Created,Pending Driver,Assigning Driver,Assigned Driver,Pickup Enroute,Pickup Arrived,Dropoff Enroute,Dropoff Arrived,Delivered,Other',
-            'delivery_date' => 'sometimes|date',
+            'delivery_date' => 'nullable|date',
             'delivery_start_time' => 'nullable|date_format:H:i',
             'delivery_end_time' => 'nullable|date_format:H:i',
             'pickup_address' => 'sometimes|string',
@@ -33,6 +33,7 @@ class OrderRequest extends FormRequest
             'dropoff_address' => 'sometimes|string',
             'dropoff_name' => 'sometimes|string',
             'distance' => 'sometimes|numeric|min:0',
+            'asap' => 'sometimes|boolean|',
             'standard_delivery_tip' => 'sometimes|numeric|min:0',
             'delivery_style' => 'sometimes|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro'
         ];
