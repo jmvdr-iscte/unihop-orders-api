@@ -58,7 +58,6 @@ class StripeService {
    
 
 
-    //@TODO TEST
     final public function getDrafts(): array
     {
         // init
@@ -124,20 +123,19 @@ class StripeService {
 
         } catch (\Exception $e) {
             Log::error('Error fetching or creating customer: ' . $e->getMessage());
-            return null;
+            throw $e;
         }
     }
 
 
 
-    //NO delivery date FIX
-    public function createNewDraft(array $item_details): ?string
+    public function createNewDraft(array $item_details): string
     {
         $client = $this->getClient();
-
+        
         try {
             $payload = [
-                'customer' => $item_details['job_id'],
+                'customer' => $item_details['customer_id'],
                 'currency' => 'USD',
                 'metadata' => [
                     'month' => date('m', strtotime($item_details['delivery_date'])),
@@ -150,7 +148,7 @@ class StripeService {
             return $invoice->id;
         } catch (\Exception $e) {
             Log::error('Failed to create draft invoice: ' . $e->getMessage());
-            return null;
+            throw $e;
         }
     }
 
@@ -242,7 +240,7 @@ class StripeService {
             }
         } catch (\Exception $e) {
             Log::error('Failed to update draft: ' . $e->getMessage());
-            return 'Failed to update draft';
+            throw $e;
         }
 
         return 'Draft Updated Successfully';

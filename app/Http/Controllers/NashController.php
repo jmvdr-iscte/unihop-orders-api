@@ -20,7 +20,6 @@ class NashController extends Controller
         $nash_service = new NashService();
         $stripe_service = new StripeService();
 
-
         $body = $request->all();
         if (!isset($body['data']['id'])) {
             return response()->json(['message' => 'id not found.'], 404);
@@ -28,7 +27,6 @@ class NashController extends Controller
         
         $details = $nash_service->fetchJobDetails($body['data']['id']);
 
-       
         $order = Order::updateOrCreate(
             ['job_id' => $details['job_id']],
             [
@@ -48,8 +46,7 @@ class NashController extends Controller
             ]
         );
         
-        var_dump($details);
-        die();
+        //TODO: add stripe type
         $stripe_service->processStripe($details, 'Normal', $details['standard_delivery_tip']);
 
         return response()->json($order);

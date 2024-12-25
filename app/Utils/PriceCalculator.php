@@ -6,7 +6,7 @@ class PriceCalculator
 {
     final public static function calculate(array $data, float $distance, ?string $option_id = null): string
     {
-        $tip = ($data["selectedConfiguration"]["tasks"][0]["tipAmountCents"] ?? 0)/ 100;
+        $tip = ($data['jobConfigurations'][0]['tasks'][0]['tipAmountCents'] ?? 0) / 100;
         $total_amount_cents = $data["jobConfigurations"][0]["advancedTask"]["delivery"]["totalPriceCents"] / 100;
         $price = 0.00;
 

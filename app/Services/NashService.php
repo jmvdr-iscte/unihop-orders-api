@@ -10,13 +10,8 @@ class NashService
 {
     private const API_URL = "https://api.sandbox.usenash.com/v1/jobs";
     
-    public function testByJobId()
-    {
-        $jobId = "job_Uh7d8nU4gMSb5wz3S2LTof";
-        $jobDetails = $this->fetchJobDetails($jobId);
-        Log::info('Job Details:', $jobDetails);
-    }
-
+    
+    
     public function fetchJobDetails(string $job_id): array
     {
         $response = Http::withHeaders([
@@ -47,24 +42,21 @@ class NashService
         $dropoff_address = preg_replace('/,\s*US(A)?$/', '', $data['jobConfigurations'][0]['package']['dropoffLocation']['formattedAddress'] ?? '');
         $dropoff_name = trim(explode('- UniHop', $data['jobConfigurations'][0]['package']['dropoffLocation']['firstName'] ?? '')[0]);
     
-        //TODO test this
-        $tip = ($data['selectedConfiguration']['tasks'][0]['tipAmountCents'] ?? 0) / 100;
-        
+        $tip = ($data['jobConfigurations'][0]['tasks'][0]['tipAmountCents'] ?? 0) / 100;
+       
         $delivery_style = $this->getDeliveryStyle($distance, $tip, $option_id);
         $price = UPrice::calculate($data, $distance, $option_id);
-    
-        $email = $data['jobConfigurations'][0]['package']['pickupLocation']['instructions'];
-        if ($email === null || isset($email) && $email === 'N/A')  {
-            Log::error('Email must be filled', ['response' => $data]);
-            throw new \Exception('Email must be filled.');
-        }
-    
-        try {
+
+        $email = $data['jobConfigurations'][0]['package']['pickupLocation']['email'] ?? null;
+        if ($email === null) {
+            $email = $data['jobConfigurations'][0]['package']['pickupLocation']['instructions'];
+            if ($email === null || isset($email) && $email === 'N/A')  {
+                Log::error('Email must be filled', ['response' => $data]);
+                throw new \Exception('Email must be filled.');
+            }
             $email = trim(explode('-*&', $email)[1]);
-        } catch (\Exception $e) {
-            $email = trim(explode('-*', $email)[1]);
         }
-    
+
         $status = $this->mapStatus($status, $package_delivery_mode, $distance);
     
         $delivery_date = null;
@@ -119,7 +111,7 @@ class NashService
         if (in_array($status, ['CREATED', 'SCHEDULED', 'NOT_ASSIGNED_DRIVER'])) {
             return $delivery_mode === 'NOW' && $distance <= 20.0 ? 'Assigning Driver' : 'Driver Pending';
         }
-
+        
         return 'Other';
     }
     
