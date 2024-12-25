@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\OrderRequest;
+use App\Http\Requests\OrderIndexRequest;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Validator;
 
 class OrderController extends Controller
 {
@@ -15,31 +15,28 @@ class OrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(OrderIndexRequest $request)
     {
-        $validated = $request->validate([
-            'start' => 'nullable|integer|min:0',
-            'end' => 'nullable|integer|gt:start',
-        ], [
-            'start.integer' => 'The start parameter must be an integer.',
-            'start.min' => 'The start parameter must be at least 0.',
-            'end.integer' => 'The end parameter must be an integer.',
-            'end.gt' => 'The end parameter must be greater than the start parameter.',
-        ]);
+        $validated = $request->validated();
 
-        $start = $validated['start'] ?? 0; // Default start is 0
-        $end = $validated['end'] ?? ($start + 10); // Default end is 10 entries after start
+        $start = $validated['start'] ?? 0;
+        $end = $validated['end'] ?? ($start + 10);
+        $status = $validated['status'] ?? null;
 
-        // Calculate the limit
         $limit = max(0, $end - $start);
 
-        $orders = Order::skip($start)->take($limit)->get();
+        $query = Order::query();
+
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        $orders = $query->skip($start)->take($limit)->get();
 
         $orders->makeHidden(['id']);
 
         return response()->json($orders);
     }
-    
 
     /**
      * Store a newly created order in storage.

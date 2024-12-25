@@ -45,8 +45,8 @@ class NashController extends Controller
                 'delivery_style' => $details['delivery_style']
             ]
         );
-        
-        //TODO: add stripe type
+        $updated_price = 
+        $stripe_type = 
         $stripe_service->processStripe($details, 'Normal', $details['standard_delivery_tip']);
 
         return response()->json($order);

@@ -90,8 +90,10 @@ class NashService
             'dropoff_address' => $dropoff_address,
             'dropoff_name' => $dropoff_name,
             'delivery_style' => $delivery_style,
+            'option_id' => $option_id
         ];
     }
+    
     
 
     private function mapStatus(string $status, string $delivery_mode, float $distance): string

@@ -10,7 +10,7 @@ class ServerController extends Controller
     {
         return response()->json([
             'service' => 'unihop-orders',
-            'status' => 'Ok'
+            'status' => 'ok'
         ]);
     }
 }
