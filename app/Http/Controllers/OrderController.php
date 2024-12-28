@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\OrderIndexRequest;
 use App\Models\Order;
+use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -82,10 +83,11 @@ class OrderController extends Controller
 	/**
 	 * Update the specified order in storage.
 	 */
+	//TODO: test this 
 	public function update(OrderRequest $request, string $job_id): JsonResponse
 	{
 		$order = Order::where('job_id', $job_id)->first();
-
+		$stripe_service = new StripeService();
 		if ($order === null) {
 			return response()->json([
 				'error' => 'Not Found',
@@ -94,9 +96,11 @@ class OrderController extends Controller
 			], 404);
 		}
 		$body = $request->validated();
-		$order->update($body);
+		$update_data = collect($body)->except(['type', 'updated_price'])->toArray();
+		$order->update($update_data);
 
-		//TODO: add stripe
+		$stripe_service->processStripe($order->toArray(), $body['type'] ?? 'Normal', $body['updated_price']);
+
 		return response()->json($order);
 	}
 

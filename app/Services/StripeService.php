@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use Illuminate\Support\Facades\Log;
 use Stripe\Customer;
 use Stripe\Stripe;
@@ -56,15 +57,99 @@ class StripeService {
 	   }
    }
    
-   final public function getStripePrice(array $job_details)
+   final public function postProcessUpdate(array $job_details, ?Order $order = null): void
    {
-	
+		$type = "Normal";
+		$updated_price = null;
+		$price_value = null;
+
+		$parterns = [
+			"dss_bN9XiB","dsr_cv2WbL","dss_d6tSpe",
+			"dss_7jSMmA","opn_836HQA","dss_65ontq","dss_PsCM3y"
+		];
+
+		if ($order !== null) {
+
+			if ($job_details['status'] === "Created" && $order['status'] === "Canceled Driver") {
+				Log::info("Job was canceled");
+				return;
+			}
+			if (in_array($order->status, ["Assigned Driver", "Pickup Enroute", "Pickup Arrived"], true) && $job_details['status'] === 'Canceled') {
+				if (in_array($order['option_id'], $parterns, true)) {
+					$updated_price = "$15.00";
+					$price_value = "15.00";
+					
+				} else {
+					$updated_price = "$10.00";
+					$price_value = "10.00";
+				}
+
+				$type = "Canceled Driver";
+			} else if (in_array($order->status, ["Dropoff Enroute", "Dropoff Arrived", "Pickup Complete", "RETURN_IN_PROGRESS", "RETURNED"], true) && $job_details['status'] === 'Canceled'){
+				$updated_price = "";
+				$type = "Normal";
+			} else if ($job_details['status'] === 'Canceled') {
+				$updated_price = "$0.00";
+				$type = "Normal";
+				$job_details['standard_delivery_tip'] = '0.00';
+				$price_value = "0.00";
+			}
+			
+
+			if ($price_value !== null) {
+				$order->standard_delivery_tip = $price_value;
+			}
+
+			$order->update([
+				'email' => $job_details['email'],
+				'status' => $job_details['status'],
+				'distance' => $job_details['distance'],
+				'standard_delivery_tip' => $price_value !== null ? $price_value : $job_details['standard_delivery_tip'],
+				'delivery_date' => $job_details['delivery_date'],
+				'delivery_start_time' => $job_details['delivery_start_time'],
+				'delivery_end_time' => $job_details['delivery_end_time'],
+				'pickup_address' => $job_details['pickup_address'],
+				'pickup_name' => $job_details['pickup_name'],
+				'asap' => $job_details['asap'],
+				'dropoff_address' => $job_details['dropoff_address'],
+				'dropoff_name' => $job_details['dropoff_name'],
+				'delivery_style' => $job_details['delivery_style']
+			]);
+
+		} else {
+
+			if ($job_details['status'] === "Canceled") {
+				$job_details['standard_delivery_tip'] = "0.00";
+				$updated_price = "0.00";
+				$type = "Normal";
+			}
+
+			Order::create([
+				'job_id' => $job_details['job_id'],
+				'email' => $job_details['email'],
+				'status' => $job_details['status'],
+				'distance' => $job_details['distance'],
+				'standard_delivery_tip' => $job_details['standard_delivery_tip'],
+				'delivery_date' => $job_details['delivery_date'],
+				'delivery_start_time' => $job_details['delivery_start_time'],
+				'delivery_end_time' => $job_details['delivery_end_time'],
+				'pickup_address' => $job_details['pickup_address'],
+				'pickup_name' => $job_details['pickup_name'],
+				'asap' => $job_details['asap'],
+				'dropoff_address' => $job_details['dropoff_address'],
+				'dropoff_name' => $job_details['dropoff_name'],
+				'delivery_style' => $job_details['delivery_style']
+			]);
+		}
+
+	$this->processStripe($job_details, $type, $updated_price);
+
    }
 
 	final public function getDrafts(): array
 	{
 		// init
-		$client = (new self())->getClient();
+		$client = self::getClient();
 		$drafts = [];
 
 		do {
@@ -275,9 +360,9 @@ class StripeService {
 	 *
 	 * @param string $draft_id
 	 * @param string $job_id
-	 * @return array|null
+	 * @return \Stripe\InvoiceItem|null
 	 */
-	private function getDraftItems(string $draft_id, string $job_id): ?array
+	private function getDraftItems(string $draft_id, string $job_id): ?\Stripe\InvoiceItem
 	{
 		$client = $this->getClient();
 

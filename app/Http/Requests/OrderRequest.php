@@ -35,7 +35,9 @@ class OrderRequest extends FormRequest
 			'distance' => 'sometimes|numeric|min:0',
 			'asap' => 'sometimes|boolean|',
 			'standard_delivery_tip' => 'sometimes|numeric|min:0',
-			'delivery_style' => 'sometimes|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro'
+			'delivery_style' => 'sometimes|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro',
+			'type' => 'sometimes|in:Normal,Canceled Driver',
+			'updated_price' => 'sometimes|numeric|min:0'
 		];
 	}
 }
