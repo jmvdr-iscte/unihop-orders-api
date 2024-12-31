@@ -101,19 +101,51 @@ class NashService
 		if (in_array($status, ['CANCELED_BY_CUSTOMER', 'CANCELED_BY_PROVIDER', 'CANCELED_BY_NASH', 'EXPIRED'])) {
 			return 'Canceled';
 		}
-
+	
+		// Delivered status
 		if ($status === 'DROPOFF_COMPLETE') {
 			return 'Delivered';
 		}
-
+	
+		// Pickup Arrived status
+		if ($status === 'PICKUP_ARRIVED') {
+			return 'Pickup Arrived';
+		}
+	
+		// Dropoff Enroute status
+		if (in_array($status, ['PICKUP_COMPLETE', 'DROPOFF_ENROUTE'])) {
+			return 'Dropoff Enroute';
+		}
+	
+		// Pickup Enroute status
 		if ($status === 'PICKUP_ENROUTE') {
 			return 'Pickup Enroute';
 		}
-
-		if (in_array($status, ['CREATED', 'SCHEDULED', 'NOT_ASSIGNED_DRIVER'])) {
-			return $delivery_mode === 'NOW' && $distance <= 20.0 ? 'Assigning Driver' : 'Driver Pending';
+	
+		// Assigned Driver status
+		if ($status === 'ASSIGNED_DRIVER') {
+			return 'Assigned Driver';
 		}
-		
+	
+		// Dropoff Arrived status
+		if ($status === 'DROPOFF_ARRIVED') {
+			return 'Dropoff Arrived';
+		}
+	
+		// Other statuses
+		if (in_array($status, ['FAILED', 'CANCELED_BY_AUTO_REASSIGN', 'RETURNED', 'RETURN_IN_PROGRESS', 'RETURN_ARRIVED'])) {
+			return 'Other';
+		}
+	
+		// Handling CREATED, SCHEDULED, NOT_ASSIGNED_DRIVER statuses with delivery mode checks
+		if (in_array($status, ['CREATED', 'SCHEDULED', 'NOT_ASSIGNED_DRIVER'])) {
+			if ($delivery_mode === 'NOW') {
+				return $distance <= 20.0 ? 'Assigning Driver' : 'Driver Pending';
+			} else {
+				return 'Created';
+			}
+		}
+
 		return 'Other';
 	}
 	
@@ -139,7 +171,7 @@ class NashService
 			return "Special Handling";
 		} elseif (in_array($option_id, ["opn_836HQA", "dss_PsCM3y"])) {
 			return "Oversize";
-		} elseif ($tip <= 2) {
+		} elseif ($tip <= 3) {
 			return "Standard LCF";
 		} else {
 			return "Standard";

@@ -62,6 +62,7 @@ class OrderController extends Controller
 			'standard_delivery_tip' => 'required|numeric|min:0',
 			'delivery_style' => 'required|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro',
 			'asap' => 'nullable|boolean',
+			'stripe_processed' => 'nullable|boolean',
 		]);
 
 		$order = Order::create($validated);
@@ -96,11 +97,14 @@ class OrderController extends Controller
 			], 404);
 		}
 		$body = $request->validated();
-		$update_data = collect($body)->except(['type', 'updated_price'])->toArray();
+		$update_data = collect($body)->except(['type', 'updated_price', 'process_stripe'])->toArray();
+		
 		$order->update($update_data);
 
-		$stripe_service->processStripe($order->toArray(), $body['type'] ?? 'Normal', $body['updated_price']);
-
+		if (isset($body['process_stripe']) && $body['process_stripe'] === true) {
+			$stripe_service->processStripe($order->toArray(), $body['type'] ?? 'Normal', $body['updated_price'] ?? null);
+		}
+		
 		return response()->json($order);
 	}
 
@@ -115,22 +119,5 @@ class OrderController extends Controller
 		$order->delete();
 
 		return response()->json(['message' => 'Order deleted successfully'], 200);
-	}
-
-	/**
-	 * Filter orders by status.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @return \Illuminate\Http\Response
-	 */
-	public function filterByStatus(Request $request)
-	{
-		$validated = $request->validate([
-			'status' => 'required|in:pending,in_progress,delivered,cancelled',
-		]);
-
-		$orders = Order::where('status', $validated['status'])->get();
-
-		return response()->json($orders);
 	}
 }

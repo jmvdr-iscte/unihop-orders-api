@@ -35,7 +35,8 @@ class Order extends Model
 		'distance',
 		'standard_delivery_tip',
 		'delivery_style',
-		'asap'
+		'asap',
+		'stripe_processed'
 	];
 
 	/**
