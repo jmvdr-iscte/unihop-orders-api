@@ -20,54 +20,23 @@ class OrderController extends Controller
 	{
 		$validated = $request->validated();
 
-		$start = $validated['start'] ?? 0;
-		$end = $validated['end'] ?? ($start + 10);
-		$status = $validated['status'] ?? null;
+		$page = $validated['page'] ?? 1;
+		$perPage = $validated['per_page'] ?? 10;
 
-		$limit = max(0, $end - $start);
+		$statuses = $validated['status'] ?? null;
 
 		$query = Order::query();
 
-		if ($status !== null) {
-			$query->where('status', $status);
+		if ($statuses !== null) {
+			$query->whereIn('status', $statuses);
 		}
 
-		$orders = $query->skip($start)->take($limit)->get();
-
-		$orders->makeHidden(['id']);
+		$orders = $query->paginate($perPage, ['*'], 'page', $page);
+		$orders->getCollection()->each(function ($order) {
+				$order->makeHidden(['id']);
+		});
 
 		return response()->json($orders);
-	}
-
-	/**
-	 * Store a newly created order in storage.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @return \Illuminate\Http\Response
-	 */
-	public function store(Request $request)
-	{
-		$validated = $request->validate([
-			'job_id' => 'required|uuid',
-			'email' => 'required|email',
-			'status' => 'required|in:Created,Pending Driver,Assigning Driver,Assigned Driver,Pickup Enroute,Pickup Arrived,Dropoff Enroute,Dropoff Arrived,Delivered,Other',
-			'delivery_date' => 'date',
-			'delivery_start_time' => 'nullable|date_format:H:i',
-			'delivery_end_time' => 'nullable|date_format:H:i',
-			'pickup_address' => 'required|string',
-			'pickup_name' => 'required|string',
-			'dropoff_address' => 'required|string',
-			'dropoff_name' => 'required|string',
-			'distance' => 'required|numeric|min:0',
-			'standard_delivery_tip' => 'required|numeric|min:0',
-			'delivery_style' => 'required|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro',
-			'asap' => 'nullable|boolean',
-			'stripe_processed' => 'nullable|boolean',
-		]);
-
-		$order = Order::create($validated);
-
-		return response()->json($order, 201);
 	}
 
 	/**

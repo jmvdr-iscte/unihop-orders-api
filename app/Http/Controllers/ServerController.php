@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 
 class ServerController extends Controller
 {
-    public function health() :JsonResponse
+    public function health(): JsonResponse
     {
         return response()->json([
             'service' => 'unihop-orders',

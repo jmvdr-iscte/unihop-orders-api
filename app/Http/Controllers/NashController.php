@@ -30,6 +30,6 @@ class NashController extends Controller
 
 		$order = Order::where('job_id', $details['job_id'])->first();
 		$stripe_service->postProcessUpdate($details, $order);
-		return response()->json([], 200);
+		return response()->json([], 201);
 	}
 }

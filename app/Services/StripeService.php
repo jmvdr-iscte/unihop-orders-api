@@ -229,8 +229,8 @@ class StripeService {
 
 
 
-	//TODO: check this 
-	public function formatItemDetails(array $job_details, string $stripe_type, ?string $updated_price = null): array
+	//TODO: check this
+	public function formatItemDetails(array $job_details): array
 	{
 		$email = strtolower(trim($job_details['email']));
 		$price = (float)str_replace('$', '', $job_details['standard_delivery_tip']);
@@ -280,10 +280,10 @@ class StripeService {
 	 *
 	 * @param string $exiting_draft_id
 	 * @param array $item_details
-	 * @return string
+	 * @return void
 	 */
 	//REMOVE THE RETURNS
-	public function addItemToExistingDraft(string $exiting_draft_id, array $item_details): string
+	public function addItemToExistingDraft(string $exiting_draft_id, array $item_details): void
 	{
 		$client = $this->getClient();
 
@@ -309,17 +309,18 @@ class StripeService {
 						'job_id' => $item_details['job_id'],
 					],
 				]);
-
-				return 'Draft Updated Successfully';
+				Log::info('Draft Updated Successfully', ['item' => $item_details]);
+				return;
 			} else {
-				return 'Ignored 0 price item';
+				Log::info('Ignored 0 price.', ['item' => $item_details]);
+				return;
 			}
 		} catch (\Exception $e) {
 			Log::error('Failed to update draft: ' . $e->getMessage());
 			throw $e;
 		}
 
-		return 'Draft Updated Successfully';
+		return;
 	}
 
 
