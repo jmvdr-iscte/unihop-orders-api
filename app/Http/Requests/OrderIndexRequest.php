@@ -63,7 +63,6 @@ class OrderIndexRequest extends FormRequest
     protected function prepareForValidation()
     {
         if (is_string($this->status)) {
-            // Decode and split the string by commas
             $decodedStatus = urldecode($this->status);
             $splitStatus = explode(',', $decodedStatus);
             $splitStatus = array_map('trim', $splitStatus);
@@ -73,10 +72,9 @@ class OrderIndexRequest extends FormRequest
             ]);
         }
 
-        // Ensure that status is always treated as an array, even if passed multiple times
         if (is_array($this->status)) {
             $this->merge([
-                'status' => array_map('trim', $this->status), // Trim any extra spaces
+                'status' => array_map('trim', $this->status),
             ]);
         }
     }

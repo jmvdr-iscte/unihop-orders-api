@@ -25,7 +25,8 @@ return new class extends Migration
 			$table->text('dropoff_address'); // Dropoff address
 			$table->string('dropoff_name'); // Name for dropoff
 			$table->decimal('distance', 5, 2); // Distance in miles
-			$table->decimal('standard_delivery_tip', 8, 2); // Standard delivery + tip
+			$table->decimal('price', 8, 2); //
+			$table->decimal('tip', 8, 2); //
 			$table->enum('delivery_style', array_map(fn($case) => $case->value, EDeliveryStyle::cases())); // Delivery style options
 			$table->boolean('asap')->nullable()->default(false); // Delivery style options
 			$table->boolean('stripe_processed')->default(false);

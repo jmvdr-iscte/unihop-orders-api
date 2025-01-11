@@ -33,7 +33,8 @@ class Order extends Model
 		'dropoff_address',
 		'dropoff_name',
 		'distance',
-		'standard_delivery_tip',
+		'price',
+		'tip',
 		'delivery_style',
 		'asap',
 		'stripe_processed'
@@ -47,7 +48,8 @@ class Order extends Model
 	protected $casts = [
 		'delivery_date' => 'datetime',
 		'distance' => 'float',
-		'standard_delivery_tip' => 'float',
+		'price' => 'float',
+		'tip' => 'float',
 	];
 
 	/**
@@ -79,6 +81,6 @@ class Order extends Model
 	 */
 	public function getTotalCostAttribute()
 	{
-		return $this->standard_delivery_tip;
+		return $this->price;
 	}
 }

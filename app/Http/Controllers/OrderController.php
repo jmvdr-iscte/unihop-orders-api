@@ -7,7 +7,7 @@ use App\Http\Requests\OrderIndexRequest;
 use App\Models\Order;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
@@ -32,8 +32,10 @@ class OrderController extends Controller
 		}
 
 		$orders = $query->paginate($perPage, ['*'], 'page', $page);
-		$orders->getCollection()->each(function ($order) {
-				$order->makeHidden(['id']);
+		$orders->getCollection()->transform(function ($order) {
+			$order->makeHidden(['id']);
+			$order->dropoff_window_end = $this->calculateDropoffWindowEnd($order);
+			return $order;
 		});
 
 		return response()->json($orders);
@@ -53,7 +55,7 @@ class OrderController extends Controller
 	/**
 	 * Update the specified order in storage.
 	 */
-	//TODO: test this 
+	//FIX the redirect
 	public function update(OrderRequest $request, string $job_id): JsonResponse
 	{
 		$order = Order::where('job_id', $job_id)->first();
@@ -70,9 +72,9 @@ class OrderController extends Controller
 		
 		$order->update($update_data);
 
-		if (isset($body['process_stripe']) && $body['process_stripe'] === true) {
-			$stripe_service->processStripe($order->toArray(), $body['type'] ?? 'Normal', $body['updated_price'] ?? null);
-		}
+		// if (isset($body['process_stripe']) && $body['process_stripe'] === true) {
+		// 	$stripe_service->processStripe($order->toArray(), $body['type'] ?? 'Normal', $body['updated_price'] ?? null);
+		// }
 		
 		return response()->json($order);
 	}
@@ -88,5 +90,24 @@ class OrderController extends Controller
 		$order->delete();
 
 		return response()->json(['message' => 'Order deleted successfully'], 200);
+	}
+
+
+
+	private function calculateDropoffWindowEnd(Order $order): ?string
+	{
+		if ($order->asap) {
+			return null;
+		}
+
+		$deliveryTime = Carbon::parse($order->delivery_date);
+		$timeToAdd = match (strtolower($order->delivery_style)) {
+			'special handling', 'oversize' => $order->distance <= 20 ? 20 : 30,
+			'hybrid' => $order->distance <= 15 ? 20 : ($order->distance <= 20 ? 40 : 60),
+			'custom', 'standard lcf' => $order->distance <= 5 ? 20 : 60,
+			default => $order->distance <= 15 ? 20 : 60,
+		};
+
+		return $deliveryTime->addMinutes($timeToAdd)->format('g:i A');
 	}
 }

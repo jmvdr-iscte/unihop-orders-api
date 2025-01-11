@@ -36,7 +36,8 @@ class OrderFactory extends Factory
             'dropoff_address' => $this->faker->address(),
             'dropoff_name' => $this->faker->name(),
             'distance' => $this->faker->randomFloat(2, 1, 149), // Random distance between 1 and 100 miles
-            'standard_delivery_tip' => $this->faker->randomFloat(2, 0, 50), // Random tip between 0 and 50
+            'price' => $this->faker->randomFloat(2, 0, 50), // Random tip between 0 and 50
+            'tip' => $this->faker->randomFloat(2, 0, 50), // Random tip between 0 and 50
             'delivery_style' => $this->faker->randomElement(array_map(fn($case) => $case->value, EDeliveryStyle::cases())),
             'asap' => $this->faker->boolean(),
         ];

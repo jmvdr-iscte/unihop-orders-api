@@ -8,6 +8,7 @@ use App\Http\Controllers\NashController;
 Route::get('/health',[ServerController::class, 'health']);
 
 Route::get('/orders', [OrderController::class, 'index']);
-Route::patch('/orders/{job_id}', [OrderController::class, 'update']);
+
+Route::patch('/order/{job_id}', [OrderController::class, 'update']);
 
 Route::post('orders', [NashController::class, 'handleJob']);

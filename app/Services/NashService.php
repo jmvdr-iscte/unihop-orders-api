@@ -45,7 +45,7 @@ class NashService
 		$tip = ($data['jobConfigurations'][0]['tasks'][0]['tipAmountCents'] ?? 0) / 100;
 	   
 		$delivery_style = $this->getDeliveryStyle($distance, $tip, $option_id);
-		$price = UPrice::calculate($data, $distance, $option_id);
+		$price = UPrice::calculate($data, $distance, $tip, $option_id);
 
 		$email = $data['jobConfigurations'][0]['package']['pickupLocation']['email'] ?? null;
 		if ($email === null) {
@@ -80,7 +80,8 @@ class NashService
 			'email' => $email,
 			'status' => $status,
 			'distance' => round($distance, 2),
-			'standard_delivery_tip' => $price,
+			'price' => $price,
+			'tip' => $tip,
 			'delivery_date' => $delivery_date,
 			'delivery_start_time' => $switch_start_end_flag ? null : $delivery_time,
 			'delivery_end_time' => $switch_start_end_flag ? $delivery_time : null,
@@ -137,7 +138,6 @@ class NashService
 			return 'Other';
 		}
 	
-		// Handling CREATED, SCHEDULED, NOT_ASSIGNED_DRIVER statuses with delivery mode checks
 		if (in_array($status, ['CREATED', 'SCHEDULED', 'NOT_ASSIGNED_DRIVER'])) {
 			if ($delivery_mode === 'NOW') {
 				return $distance <= 20.0 ? 'Assigning Driver' : 'Driver Pending';

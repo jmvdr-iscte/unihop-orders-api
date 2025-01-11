@@ -4,9 +4,8 @@ namespace App\Utils;
 
 class PriceCalculator
 {
-	final public static function calculate(array $data, float $distance, ?string $option_id = null): string
+	final public static function calculate(array $data, float $distance, float $tip, ?string $option_id = null): string
 	{
-		$tip = ($data['jobConfigurations'][0]['tasks'][0]['tipAmountCents'] ?? 0) / 100;
 		$total_amount_cents = $data["jobConfigurations"][0]["advancedTask"]["delivery"]["totalPriceCents"] / 100;
 		$price = 0.00;
 

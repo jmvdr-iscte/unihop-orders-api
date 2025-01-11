@@ -26,7 +26,7 @@ class StripeService {
 	}
 
 
-   public function processStripe(array $job_details, string $stripe_type, ?string $updated_price = null): void
+   public function processStripe(array $job_details): void
    {
 	   Log::info('Processing Stripe', $job_details);
 
@@ -46,7 +46,7 @@ class StripeService {
 
 	   Log::info('Matching Drafts Found: ' . count($matchingDrafts));
 
-	   $itemDetails = $this->formatItemDetails($job_details, $stripe_type, $updated_price);
+	   $itemDetails = $this->formatItemDetails($job_details);
 
 	   if (!empty($matchingDrafts)) {
 		   $existingDraftId = $matchingDrafts[0]['id'];
@@ -102,7 +102,7 @@ class StripeService {
 			];
 
 			if ($price_value !== null) {
-				$update['standard_delivery_tip'] = $price_value;
+				$update['price'] = $price_value;
 			}
 
 			$order->update($update);
@@ -110,7 +110,7 @@ class StripeService {
 		} else {
 
 			if ($job_details['status'] === "Canceled") {
-				$job_details['standard_delivery_tip'] = "0.00";
+				$job_details['price'] = "0.00";
 			}
 
 			Order::create([
@@ -118,7 +118,8 @@ class StripeService {
 				'email' => $job_details['email'],
 				'status' => $job_details['status'],
 				'distance' => $job_details['distance'],
-				'standard_delivery_tip' => $job_details['standard_delivery_tip'],
+				'price' => $job_details['price'],
+				'tip' => $job_details['tip'],
 				'delivery_date' => $job_details['delivery_date'],
 				'delivery_start_time' => $job_details['delivery_start_time'],
 				'delivery_end_time' => $job_details['delivery_end_time'],
@@ -233,7 +234,7 @@ class StripeService {
 	public function formatItemDetails(array $job_details): array
 	{
 		$email = strtolower(trim($job_details['email']));
-		$price = (float)str_replace('$', '', $job_details['standard_delivery_tip']);
+		$price = (float)str_replace('$', '', $job_details['price']);
 
 		// Calculate tip
 		$tip = $job_details['delivery_style'] ?? 0;

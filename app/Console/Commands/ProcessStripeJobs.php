@@ -33,7 +33,6 @@ class ProcessStripeJobs extends Command
 		
 		$stripe_service = new StripeService();
 
-		// Fetch jobs from the last 7 days
 		$orders = Order::where('created_at', '>=', Carbon::now()->subDays(7))
 			->where('stripe_processed' , '=', false)
 			->whereIn('status', ['Delivered', 'Canceled', 'Canceled Driver', 'Other'])
@@ -45,7 +44,6 @@ class ProcessStripeJobs extends Command
 				
 				$order_details = $order->toArray();
 
-				//check this
 				$status = EStatus::tryFrom($order_details['status']);
 
 				if ($status === null){
@@ -56,7 +54,7 @@ class ProcessStripeJobs extends Command
 				$type = $status->isCanceled($status) ? 'Canceled Driver' : 'Normal'; 
 
 				$stripe_service->processStripe($order_details, $type, $type === 'Canceled Driver' ? 
-					$order_details['standard_delivery_tip'] : null
+					$order_details['price'] : null
 				);
 				
 				$order->update([
