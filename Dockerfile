@@ -22,10 +22,11 @@ RUN cd /app && composer install --no-dev
 
 # Set ownership of the application
 RUN chown -R www-data:www-data /app
-RUN chmod +x /var/www/html/db-migration.sh
+# Ensure the script is copied correctly
+COPY ./src/db-migration.sh /app/db-migration.sh
 
-# This will run the shell file at the time when container is up-and-running successfully (and NOT at the BUILD time)
-ENTRYPOINT ["/var/www/html/db-migration.sh"]
+# Give execute permission to the migration script
+RUN chmod +x /app/db-migration.sh
 
-# Wait for PostgreSQL before starting and run migrations
-CMD sh /app/docker/startup.sh
+# Set the startup script to handle migrations and service start
+CMD sh /app/docker/startup.sh && sh /app/db-migration.sh
