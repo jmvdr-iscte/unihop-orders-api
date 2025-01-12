@@ -26,8 +26,8 @@ class OrderRequest extends FormRequest
 			'email' => 'sometimes|email',
 			'status' => 'sometimes|in:Created,Pending Driver,Assigning Driver,Assigned Driver,Pickup Enroute,Pickup Arrived,Dropoff Enroute,Dropoff Arrived,Delivered,Other',
 			'delivery_date' => 'nullable|date',
-			'delivery_start_time' => 'nullable|date_format:H:i',
-			'delivery_end_time' => 'nullable|date_format:H:i',
+			'delivery_start_time' => 'nullable|date_format:H:i:s',
+			'delivery_end_time' => 'nullable|date_format:H:i:s',
 			'pickup_address' => 'sometimes|string',
 			'pickup_name' => 'sometimes|string',
 			'dropoff_address' => 'sometimes|string',
@@ -37,10 +37,7 @@ class OrderRequest extends FormRequest
 			'stripe_processed' => 'sometimes|boolean',
 			'price' => 'sometimes|numeric|min:0',
 			'tip' => 'sometimes|numeric|min:0',
-			'delivery_style' => 'sometimes|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro',
-			// 'type' => 'sometimes|in:Normal,Canceled Driver',
-			// 'updated_price' => 'sometimes|numeric|min:0',
-			// 'process_stripe' => 'sometimes|boolean'
+			'delivery_style' => 'sometimes|in:Standard,Standard - Long,Hybrid,Special Handling,Oversize,Standard LCF,Custom,Catering Pro'
 		];
 	}
 }
