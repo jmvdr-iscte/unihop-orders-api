@@ -9,7 +9,7 @@ class ServerController extends Controller
     public function health(): JsonResponse
     {
         return response()->json([
-            'service' => 'unihop-orders',
+            'service' => 'unihop-dashboard',
             'status' => 'ok'
         ]);
     }
