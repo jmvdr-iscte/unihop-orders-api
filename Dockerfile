@@ -22,11 +22,5 @@ RUN cd /app && composer install --no-dev
 
 # Set ownership of the application
 RUN chown -R www-data:www-data /app
-# Ensure the script is copied correctly
-COPY ./db-migration.sh /app/db-migration.sh
 
-# Give execute permission to the migration script
-RUN chmod +x /app/db-migration.sh
-
-# Set the startup script to handle migrations and service start
-CMD sh /app/docker/startup.sh && sh /app/db-migration.sh
+CMD sh /app/docker/startup.sh 
