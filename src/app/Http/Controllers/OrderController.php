@@ -21,10 +21,14 @@ class OrderController extends Controller
 
 		$page = $validated['page'] ?? 1;
 		$perPage = $validated['per_page'] ?? 10;
-
+		$email = $validated['email'] ?? null;
 		$statuses = $validated['status'] ?? null;
 
 		$query = Order::query();
+
+		if ($email !== null) {
+			$query->where('email', $email);
+		}
 
 		if ($statuses !== null) {
 			$query->whereIn('status', $statuses);
