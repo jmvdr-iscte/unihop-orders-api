@@ -26,12 +26,16 @@ class OrderController extends Controller
 
 		$query = Order::query();
 
-		if ($email !== null) {
-			$query->where('email', $email);
-		}
-
 		if ($statuses !== null) {
 			$query->whereIn('status', $statuses);
+		}
+
+		if ($email !== null) {
+			if (str_starts_with($email, '@')) {
+				$query->where('email', 'LIKE', '%' . $email);
+			} else {
+				$query->where('email', $email);
+			}
 		}
 
 		$orders = $query->paginate($perPage, ['*'], 'page', $page);

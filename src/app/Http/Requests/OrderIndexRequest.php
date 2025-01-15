@@ -24,7 +24,7 @@ class OrderIndexRequest extends FormRequest
     public function rules()
     {
         return [
-            'email' => 'nullable|email',
+            'email' => 'nullable|string',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
             'start' => 'nullable|integer|min:0',
@@ -42,7 +42,7 @@ class OrderIndexRequest extends FormRequest
     public function messages()
     {
         return [
-            'email.email' => 'The email parameter must be a valid email address.',
+            'email.string' => 'The email parameter must be a valid string.',
             'page.integer' => 'The page parameter must be an integer.',
             'page.min' => 'The page parameter must be at least 1.',
             'per_page.integer' => 'The per_page parameter must be an integer.',
