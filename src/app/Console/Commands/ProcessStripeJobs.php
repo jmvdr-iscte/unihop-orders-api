@@ -33,7 +33,7 @@ class ProcessStripeJobs extends Command
 		
 		$stripe_service = new StripeService();
 
-		$orders = Order::where('created_at', '>=', Carbon::now()->subMinutes(15))
+		$orders = Order::where('created_at', '<=', Carbon::now()->subMinutes(15))
 			->where('stripe_processed' , '=', false)
 			->whereIn('status', ['Delivered', 'Canceled', 'Canceled Driver', 'Other'])
 			->get();
