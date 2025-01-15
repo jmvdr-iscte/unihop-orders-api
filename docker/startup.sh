@@ -8,4 +8,6 @@ php-fpm -D
 
 php /app/artisan migrate --force
 
+php /app/artisan schedule:work &
+
 nginx

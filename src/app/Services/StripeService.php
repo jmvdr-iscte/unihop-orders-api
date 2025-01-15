@@ -230,14 +230,13 @@ class StripeService {
 
 
 
-	//TODO: check this
 	public function formatItemDetails(array $job_details): array
 	{
 		$email = strtolower(trim($job_details['email']));
 		$price = (float)str_replace('$', '', $job_details['price']);
 
 		// Calculate tip
-		$tip = $job_details['delivery_style'] ?? 0;
+		$tip = $job_details['tip'] ?? 0;
 
 		// Format date
 		$delivery_date = new \DateTime($job_details['delivery_date']);
@@ -259,11 +258,7 @@ class StripeService {
 
 		$qty = 1;
 		$customer_id = $this->getCustomerId($email, $job_details['pickup_name']);
-
-		// if ($stripe_type === 'Canceled Driver' && $updated_price) {
-		// 	$price = (float)str_replace('$', '', $updated_price);
-		// }
-
+		
 		return [
 			'customer_id' => $customer_id,
 			'customer_email' => $email,
@@ -283,7 +278,6 @@ class StripeService {
 	 * @param array $item_details
 	 * @return void
 	 */
-	//REMOVE THE RETURNS
 	public function addItemToExistingDraft(string $exiting_draft_id, array $item_details): void
 	{
 		$client = $this->getClient();
