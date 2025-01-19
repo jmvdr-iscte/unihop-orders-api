@@ -25,7 +25,17 @@ class OrderController extends Controller
 		$statuses = $validated['status'] ?? null;
 
 		$query = Order::query();
-
+		if ($validated['time'] !== null) {
+			$time = Carbon::now();
+			if ($validated['time'] === 'today') {
+				$query->whereDate('delivery_date', $time->toDateString());
+			} elseif ($validated['time'] === 'past') {
+				$query->whereDate('delivery_date', '<', $time->toDateString());
+			} elseif ($validated['time'] === 'future') {
+				$query->whereDate('delivery_date', '>', $time->toDateString());
+			}
+		}
+		$query->orderBy('delivery_date', 'desc');
 		if ($statuses !== null) {
 			$query->whereIn('status', $statuses);
 		}
@@ -37,6 +47,7 @@ class OrderController extends Controller
 				$query->where('email', $email);
 			}
 		}
+
 
 		$orders = $query->paginate($perPage, ['*'], 'page', $page);
 		$orders->getCollection()->transform(function ($order) {

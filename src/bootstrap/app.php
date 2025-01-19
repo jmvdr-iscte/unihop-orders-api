@@ -13,14 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
-            '*',
             '/orders/*',
             '/order/*',
             '/health'
         ]);
         $middleware->alias( [
             'webhook' => CustomMiddleware\Webhook::class,
-            'request.logger' => CustomMiddleware\RequestLogger::class
+            'request.logger' => CustomMiddleware\RequestLogger::class,
+            'api_key' => CustomMiddleware\ApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

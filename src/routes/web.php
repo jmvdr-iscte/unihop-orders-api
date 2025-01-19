@@ -6,9 +6,13 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NashController;
 
 Route::get('/health',[ServerController::class, 'health']);
-
+   
 Route::get('/orders', [OrderController::class, 'index']);
 
-Route::patch('/order/{job_id}', [OrderController::class, 'update']);
+Route::middleware('api_key')->group(function () {
+    Route::patch('/order/{job_id}', [OrderController::class, 'update']);
+});
 
-Route::post('orders', [NashController::class, 'handleJob']);
+Route::middleware('webhook')->group(function () {
+    Route::post('orders', [NashController::class, 'handleJob']);
+});
