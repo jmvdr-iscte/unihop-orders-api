@@ -11,7 +11,7 @@ cd /app
 php artisan migrate --force
 
 #fill db
-php artisan script:fill-database
+#php artisan script:fill-database
 # Start Laravel Scheduler in the background
 php artisan schedule:work &
 
