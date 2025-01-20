@@ -32,7 +32,7 @@ class OrderController extends Controller
 		$query = Order::query();
 
 		//time filter
-		if ($validated['time'] !== null) {
+		if (isset($validated['time'])) {
 			$time = Carbon::now();
 			if ($validated['time'] === 'today') {
 				$query->whereDate('delivery_date', $time->toDateString());
