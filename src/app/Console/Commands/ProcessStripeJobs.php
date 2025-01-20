@@ -26,14 +26,18 @@ class ProcessStripeJobs extends Command
 
 	/**
 	 * Execute the console command.
+	 * 
+	 * @return void
 	 */
 	public function handle()
 	{
+		//initalize
 		$this->info('Fetching jobs from the last 7 days...');
 		
 		$stripe_service = new StripeService();
 
-		$orders = Order::where('created_at', '<=', Carbon::now()->subMinutes(15))
+		//get orders
+		$orders = Order::where('created_at', '<=', Carbon::now()->subDays(8))
 			->where('stripe_processed' , '=', false)
 			->whereIn('status', ['Delivered', 'Canceled', 'Canceled Driver', 'Other'])
 			->get();
@@ -51,6 +55,7 @@ class ProcessStripeJobs extends Command
 					continue;
 				}
 
+				//process stripe
 				$stripe_service->processStripe($order_details);
 				
 				$order->update([

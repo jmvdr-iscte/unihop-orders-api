@@ -11,7 +11,13 @@ class ApiKey
 	/**
 	 * Handle an incoming request.
 	 *
-	 * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+	 * @param  \Illuminate\Http\Request $request
+	 * TThe received request
+	 * 
+	 * @param  \Closure $next
+	 * The next step
+	 * 
+	 * @return mixed
 	 */
 	public function handle(Request $request, Closure $next): Response
 	{

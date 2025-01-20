@@ -11,12 +11,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Webhook
 {
-  /**
+  	/**
 	 * Handle an incoming request.
 	 *
-	 * @param  \Closure(\Illuminate\Http\Request):
+	 * @param  \Illuminate\Http\Request $request
+	 * TThe received request
 	 * 
-	 * (\Symfony\Component\HttpFoundation\Response)  $next
+	 * @param  \Closure $next
+	 * The next step
+	 * 
+	 * @return mixed
 	 */
 	public function handle(Request $request, Closure $next): Response
 	{

@@ -8,12 +8,25 @@ use Illuminate\Support\Facades\Log;
 
 class NashService
 {
+	//private const
 	private const API_URL = "https://api.sandbox.usenash.com/v1/jobs";
 	
 	
-	
-	public function fetchJobDetails(string $job_id): array
+	//final public methods
+	/**
+	 * Fetches the details of a job from Nash API.
+	 *
+	 * @param string $job_id 
+	 * The job ID.
+	 * 
+	 * @return array 
+	 * The job details.
+	 * 
+	 * @throws \Exception If the request is invalid.
+	 */
+	final public function fetchJobDetails(string $job_id): array
 	{
+		//request
 		$response = Http::withHeaders([
 			'Authorization' => 'Bearer ' . env('NASH_SECRET'),
 			'Accept' => 'application/json',
@@ -24,7 +37,7 @@ class NashService
 			throw new \Exception('Invalid Nash request');
 		}
 	
-		
+		//get data
 		$data = $response->json();
 		$status = $data['jobConfigurations'][0]['advancedTask']['delivery']['status'];
 		$delivery_start_time = $data['jobConfigurations'][0]['package']['dropoffStartTime'] ?? null;
@@ -47,16 +60,18 @@ class NashService
 		$delivery_style = $this->getDeliveryStyle($distance, $tip, $option_id);
 		$price = UPrice::calculate($data, $distance, $tip, $option_id);
 
+		//validate email
 		$email = $data['jobConfigurations'][0]['package']['pickupLocation']['email'] ?? null;
 		if ($email === null) {
 			$email = $data['jobConfigurations'][0]['package']['pickupLocation']['instructions'];
-			if ($email === null || isset($email) && $email === 'N/A')  {
+			if ($email === null || isset($email) && $email === 'N/A' || empty($email))  {
 				Log::error('Email must be filled', ['response' => $data]);
 				throw new \Exception('Email must be filled.');
 			}
 			$email = trim(explode('-*&', $email)[1]);
 		}
 
+		//status
 		$status = $this->mapStatus($status, $package_delivery_mode, $distance);
 	
 		$delivery_date = null;
@@ -75,6 +90,7 @@ class NashService
 			$delivery_time = null;
 		}
 	
+		//return
 		return [
 			'job_id' => $job_id,
 			'email' => $email,
@@ -96,7 +112,22 @@ class NashService
 	}
 	
 	
-
+	//private methods
+	/**
+	 * Maps the status of the delivery.
+	 *
+	 * @param string $status 
+	 * The status of the delivery.
+	 * 
+	 * @param string $delivery_mode 
+	 * The delivery mode of the delivery.
+	 * 
+	 * @param float $distance 
+	 * The distance of the delivery.
+	 * 
+	 * @return string 
+	 * The mapped status.
+	 */
 	private function mapStatus(string $status, string $delivery_mode, float $distance): string
 	{
 		if (in_array($status, ['CANCELED_BY_CUSTOMER', 'CANCELED_BY_PROVIDER', 'CANCELED_BY_NASH', 'EXPIRED'])) {
@@ -149,6 +180,21 @@ class NashService
 		return 'Other';
 	}
 	
+	/**
+	 * Gets the delivery style.
+	 *
+	 * @param float $distance 
+	 * The distance of the delivery.
+	 * 
+	 * @param float $tip 
+	 * The tip of the delivery.
+	 * 
+	 * @param string|null $option_id [default=null]
+	 * The option id of the delivery.
+	 * 
+	 * @return string 
+	 * The delivery style.
+	 */
 	private function getDeliveryStyle(float $distance, float $tip, ?string $option_id = null): string
 	{
 		if ($option_id === "dss_5BR7K8") {

@@ -29,10 +29,11 @@ class fillDatabaseJob extends Command
 	/**
 	 * Execute the console command.
 	 *
-	 * @return int
+	 * @return void
 	 */  
 	public function handle()
 	{
+		//initialize the google client
 		$spreadsheet_id = env('GOOGLE_SPREADSHEET_ID');
 		$range = env('GOOGLE_SHEET_RANGE');
 
@@ -43,6 +44,7 @@ class fillDatabaseJob extends Command
 		$service = new GoogleSheets($client);
 		
 		try {
+			//get values
 			$response = $service->spreadsheets_values->get($spreadsheet_id, $range);
 			$values = $response->getValues();
 		} catch (\Exception $e) {
@@ -58,6 +60,7 @@ class fillDatabaseJob extends Command
 		foreach ($values as $index => $row) {
 			if ($index === 0) continue;
 			try {
+				//insert
 				DB::table('orders.orders')->insert([
 					'job_id' => $row[0],
 					'email' => $row[1],

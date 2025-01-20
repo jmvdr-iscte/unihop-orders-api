@@ -16,29 +16,41 @@ class StripeService {
 	private $client = null;
 
 
-
+	//protected method
 	protected function getClient(): StripeClient
 	{
 		if ($this->client === null) {
 			$this->client = new StripeClient(env('STRIPE_SECRET_KEY'));
 		}
+
+		//return
 		return $this->client;
 	}
 
+	//final public methods
+	/**
+	 * Process a job and update the Stripe invoice.
+	 *
+	 * @param array $job_details
+	 * The job details.
+	 * 
+	 * @return void
+	 */
+	final public function processStripe(array $job_details): void
+	{
+		//process stripe
+		Log::info('Processing Stripe', $job_details);
 
-   public function processStripe(array $job_details): void
-   {
-	   Log::info('Processing Stripe', $job_details);
+		$existingDrafts = self::getDrafts();
+		Log::info('Total Drafts Found: ' . count($existingDrafts));
 
-	   $existingDrafts = self::getDrafts();
-	   Log::info('Total Drafts Found: ' . count($existingDrafts));
+		//get email
+		$customerEmail = $job_details['email'];
+		$deliveryDate = new \DateTime($job_details['delivery_date']);
+		$month = $deliveryDate->format('m');
+		$year = $deliveryDate->format('Y');
 
-	   $customerEmail = $job_details['email'];
-	   $deliveryDate = new \DateTime($job_details['delivery_date']);
-	   $month = $deliveryDate->format('m');
-	   $year = $deliveryDate->format('Y');
-
-	   $matchingDrafts = array_filter($existingDrafts, function ($draft) use ($customerEmail, $month, $year) {
+		$matchingDrafts = array_filter($existingDrafts, function ($draft) use ($customerEmail, $month, $year) {
 		   return $draft['customer_email'] === $customerEmail &&
 				  $draft['metadata']['month'] === $month &&
 				  $draft['metadata']['year'] === $year;
@@ -48,6 +60,7 @@ class StripeService {
 
 	   $itemDetails = $this->formatItemDetails($job_details);
 
+	   //add draft
 	   if (!empty($matchingDrafts)) {
 		   $existingDraftId = $matchingDrafts[0]['id'];
 		   $this->addItemToExistingDraft($existingDraftId, $itemDetails);
@@ -87,6 +100,7 @@ class StripeService {
 				$price_value = "0.00";
 			}
 
+			//update
 			$update = [
 				'email' => $job_details['email'],
 				'status' => $job_details['status'],
@@ -113,6 +127,7 @@ class StripeService {
 				$job_details['price'] = "0.00";
 			}
 
+			//create
 			Order::create([
 				'job_id' => $job_details['job_id'],
 				'email' => $job_details['email'],
@@ -134,12 +149,19 @@ class StripeService {
 		}
    }
 
+    /**
+	 * Get all draft invoices.
+	 * 
+	 * @return array
+	 * The draft invoices.
+	 */
 	final public function getDrafts(): array
 	{
-		// init
+		//initialize
 		$client = self::getClient();
 		$drafts = [];
 
+		//get drafts
 		do {
 			$params = [
 				'limit' => 100,
@@ -158,12 +180,14 @@ class StripeService {
 			$has_more = $items['has_more'] ?? false;
 		} while ($has_more);
 
+		//log drafts
 		foreach ($drafts as $invoice) {
 			if (!empty($invoice['customer_email'])) {
 				Log::info('Customer Email: ' . $invoice['customer_email']);
 			}
 		}
 
+		//return
 		return $drafts;
 	}
 
@@ -171,19 +195,26 @@ class StripeService {
 	/**
 	 * Get or create a customer ID based on email.
 	 *
-	 * @param string $customerEmail
+	 * @param string $email
+	 * The email of the customer.
+	 * 
 	 * @param string $name
+	 * The name of the customer.
+	 * 
+	 * @throws \Exception
+	 * 
 	 * @return string|null
+	 * The customer ID.
 	 */
-	public function getCustomerId(string $email, string $name): ?string
+	final public function getCustomerId(string $email, string $name): ?string
 	{
 		$client = $this->getClient();
 
-		// Normalize email
+		//normalize email
 		$email = trim(strtolower($email));
 
 		try {
-			// Search for existing customer
+			//get customers
 			$customers = $client->customers->all([
 				'limit' => 100,
 				'email' => $email,
@@ -194,6 +225,7 @@ class StripeService {
 			}
 
 			Log::info("Customer doesn't exist, creating a new one.");
+			//create new customer
 			$new_customer = $this->createCustomer($email, $name, $name);
 			return $new_customer->id;
 
@@ -203,9 +235,18 @@ class StripeService {
 		}
 	}
 
-
-
-	public function createNewDraft(array $item_details): string
+	/**
+	 * Create a new draft invoice.
+	 *
+	 * @param array $item_details
+	 * The item details.
+	 * 
+	 * @throws \Exception
+	 * 
+	 * @return string
+	 * The draft ID.
+	 */
+	final public function createNewDraft(array $item_details): string
 	{
 		$client = $this->getClient();
 		
@@ -229,16 +270,24 @@ class StripeService {
 	}
 
 
-
-	public function formatItemDetails(array $job_details): array
+	/**
+	 * Format the item details.
+	 *
+	 * @param array $job_details
+	 * The job details.
+	 * 
+	 * @return array
+	 * The formatted item details.
+	 */
+	final public function formatItemDetails(array $job_details): array
 	{
 		$email = strtolower(trim($job_details['email']));
 		$price = (float)str_replace('$', '', $job_details['price']);
 
-		// Calculate tip
+		//calculate tip
 		$tip = $job_details['tip'] ?? 0;
 
-		// Format date
+		//format date
 		$delivery_date = new \DateTime($job_details['delivery_date']);
 		$month = $delivery_date->format('d');
 		$year = $delivery_date->format('m');
@@ -259,6 +308,7 @@ class StripeService {
 		$qty = 1;
 		$customer_id = $this->getCustomerId($email, $job_details['pickup_name']);
 		
+		//return
 		return [
 			'customer_id' => $customer_id,
 			'customer_email' => $email,
@@ -271,19 +321,25 @@ class StripeService {
 	}
 
 
-	  /**
+	/**
 	 * Add an item to an existing draft invoice.
 	 *
-	 * @param string $exiting_draft_id
+	 * @param string $existing_draft_id
+	 * The existing draft ID.
+	 * 
 	 * @param array $item_details
+	 * The item details.
+	 * 
 	 * @return void
 	 */
-	public function addItemToExistingDraft(string $exiting_draft_id, array $item_details): void
+	final public function addItemToExistingDraft(string $existing_draft_id, array $item_details): void
 	{
+		//client
 		$client = $this->getClient();
 
 		try {
-			$draftItem = $this->getDraftItems($exiting_draft_id, $item_details['job_id']);
+			//get drafts
+			$draftItem = $this->getDraftItems($existing_draft_id, $item_details['job_id']);
 
 			if ($draftItem !== null) {
 				if ($item_details['price'] == 0) {
@@ -299,7 +355,7 @@ class StripeService {
 					'customer' => $item_details['customer_id'],
 					'description' => $item_details['item_name'],
 					'amount' => $item_details['price'] * 100,
-					'invoice' => $exiting_draft_id,
+					'invoice' => $existing_draft_id,
 					'metadata' => [
 						'job_id' => $item_details['job_id'],
 					],
@@ -318,13 +374,30 @@ class StripeService {
 		return;
 	}
 
-
-
+	/**
+	 * Create a new customer.
+	 *
+	 * @param string $email
+	 * The email of the customer.
+	 * 
+	 * @param string $name
+	 * The name of the customer.
+	 * 
+	 * @param string $description
+	 * The description of the customer.
+	 * 
+	 * @throws \Exception
+	 * 
+	 * @return \Stripe\Customer
+	 * The customer object.
+	 */
 	private function createCustomer(string $email, string $name, string $description): Customer
 	{
+		//client
 		$client = $this->getClient();
 
 		try {
+			//create customer
 			$customer = $client->customers->create([
 				'email' => $email,
 				'name' => $name,
@@ -343,11 +416,17 @@ class StripeService {
 	 * Fetch draft items for a specific job ID.
 	 *
 	 * @param string $draft_id
+	 * The draft ID.
+	 * 
 	 * @param string $job_id
+	 * The job ID.
+	 * 
 	 * @return \Stripe\InvoiceItem|null
+	 * The draft item.
 	 */
 	private function getDraftItems(string $draft_id, string $job_id): ?\Stripe\InvoiceItem
 	{
+		//client
 		$client = $this->getClient();
 
 		try {
@@ -356,6 +435,7 @@ class StripeService {
 				'limit' => 100,
 			]);
 
+			//fetch jobs
 			foreach ($items->data as $item) {
 				if (!empty($item->metadata['job_id']) && $item->metadata['job_id'] === $job_id) {
 					return $item;

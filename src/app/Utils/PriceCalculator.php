@@ -4,11 +4,31 @@ namespace App\Utils;
 
 class PriceCalculator
 {
+	/**
+	 * Calculate the price of a delivery.
+	 * 
+	 * @param array $data 
+	 * The data of the delivery.
+	 * 
+	 * @param float $distance
+	 * The distance of the delivery.
+	 * 
+	 * @param float $tip
+	 * The tip of the delivery.
+	 * 
+	 * @param string|null $option_id [default=null]
+	 * The option id of the delivery.
+	 * 
+	 * @return string
+	 * The price of the delivery.
+	 */
 	final public static function calculate(array $data, float $distance, float $tip, ?string $option_id = null): string
 	{
+		//initalize
 		$total_amount_cents = $data["jobConfigurations"][0]["advancedTask"]["delivery"]["totalPriceCents"] / 100;
 		$price = 0.00;
 
+		//handle options
 		if (in_array($option_id, ["dss_7jSMmA", "dss_65ontq"])) {
 			$distance_price = 35 + ceil($distance) * 0.5 + $tip;
 			$total_price = ceil($total_amount_cents * 1.15) + $tip;
@@ -43,6 +63,7 @@ class PriceCalculator
 			}
 		}
 
+		//return
 		return number_format($price, 2, '.', '');
 	}
 }
