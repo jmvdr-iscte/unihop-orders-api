@@ -74,7 +74,7 @@ class StripeService {
    {
 		$price_value = null;
 
-		$parterns = [
+		$dispatch_strategies = [
 			"dss_bN9XiB","dsr_cv2WbL","dss_d6tSpe",
 			"dss_7jSMmA","opn_836HQA","dss_65ontq","dss_PsCM3y"
 		];
@@ -86,7 +86,7 @@ class StripeService {
 				return;
 			}
 			if (in_array($order->status, ["Assigned Driver", "Pickup Enroute", "Pickup Arrived"], true) && $job_details['status'] === 'Canceled') {
-				if (in_array($order['option_id'], $parterns, true)) {
+				if (in_array($order['option_id'], $dispatch_strategies, true)) {
 					$price_value = "15.00";
 					
 				} else {
